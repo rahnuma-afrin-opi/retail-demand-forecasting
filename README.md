@@ -1,47 +1,67 @@
 # Retail Demand Forecasting: A Comparative Machine Learning Study
 
-## Project overview
+## Project Overview
 
-This project compares machine-learning models and a seasonal-naive baseline for daily retail demand forecasting using a reproducible, category-stratified sample of 50 product-store series from the M5 Forecasting Accuracy dataset.
+This project compares three machine-learning models with a seasonal-naive baseline for daily retail demand forecasting using a reproducible, category-stratified sample of 50 product-store series from the [M5 Forecasting Accuracy dataset](https://www.kaggle.com/competitions/m5-forecasting-accuracy).
 
-The goal is to demonstrate a practical forecasting workflow: preparing daily sales data, joining calendar and price information, engineering lag-based features, evaluating forecasts chronologically, and interpreting model performance under two different forecasting settings.
+The project demonstrates an end-to-end forecasting workflow, including sales-data preparation, calendar and price integration, lag-based feature engineering, chronological evaluation, and model comparison under two forecasting settings.
 
-## Dataset and sample
+**[View the executed Jupyter notebook](retail-demand-forecasting-portfolio-v2.ipynb)**
 
-- Source: Kaggle M5 Forecasting Accuracy dataset (Walmart retail sales).
-- Sample: 50 product-store series selected deterministically across FOODS, HOBBIES, and HOUSEHOLD.
-- Sample composition: 17 FOODS, 17 HOBBIES, and 16 HOUSEHOLD series.
-- Daily observations per series: 1,941 in the source sales table.
-- Missing sell prices are flagged and imputed using medians learned from the training data; sales observations are retained.
+## Dataset and Sample
 
-This is a sample-based portfolio experiment, not an analysis of the full M5 dataset.
+- **Source:** [M5 Forecasting Accuracy — Kaggle](https://www.kaggle.com/competitions/m5-forecasting-accuracy)
+- **Retailer:** Walmart
+- **Sample:** 50 product-store time series selected deterministically across three product categories.
+- **Category distribution:** 17 FOODS, 17 HOBBIES, and 16 HOUSEHOLD series.
+- **Observation period:** February 26, 2011 – May 22, 2016.
+- **Daily observations:** 1,941 per series in the source sales table.
 
-## Models
+Missing sell prices are flagged and imputed using medians learned from the training data. Sales observations are retained.
 
-- Random Forest Regressor
-- LightGBM Regressor
-- XGBoost Regressor
-- Seasonal-naive baseline using sales from seven days earlier
+This is a sample-based portfolio experiment, not an analysis of the complete M5 dataset. Results should therefore be interpreted within the scope of the selected series.
 
-## Features
+## Models Compared
 
-The notebook creates within-series lag features (1, 7, 14, and 28 days), lagged rolling means (7 and 28 days), calendar variables, SNAP indicators, sell price, and a missing-price flag. The chronological split and feature construction are designed to prevent using a day's target value to construct its own predictors.
+1. Random Forest Regressor
+2. LightGBM Regressor
+3. XGBoost Regressor
+4. Seasonal-naive baseline using sales from seven days earlier
 
-## Evaluation designs
+## Feature Engineering
 
-### 1. Rolling one-step-ahead evaluation
+The notebook constructs features including:
 
-The test period runs from 18 October 2014 to 22 May 2016. For each test date, the model predicts using features that can include actual sales observed on earlier test dates. This represents a rolling operational setting in which new actual sales become available over time.
+- Within-series sales lags: 1, 7, 14, and 28 days
+- Lagged rolling means: 7 and 28 days
+- Calendar variables
+- SNAP indicators
+- Sell prices
+- A missing-price indicator
 
-### 2. Fixed-origin 28-day evaluation
+The chronological evaluation design is intended to prevent a day's target value from being used to construct that same day's predictors.
 
-The forecast origin is 24 April 2016, and the forecast horizon is 25 April to 22 May 2016. Models are fitted using data before the forecast horizon and then forecast recursively. Within-horizon lag features use each model's own prior predictions, not actual sales from the forecast horizon. Future calendar and scheduled price fields are treated as known covariates.
+## Evaluation Methodology
 
-The two evaluation designs answer different questions; their metric values should not be compared as if they were the same test task.
+### 1. Rolling One-Step-Ahead Evaluation
 
-## Saved results from the executed notebook
+The test period runs from October 18, 2014, to May 22, 2016.
 
-### Rolling one-step-ahead
+For each test date, the model predicts demand using features that may include actual sales observed on earlier test dates. This represents a rolling operational setting in which new actual sales become available over time.
+
+### 2. Fixed-Origin 28-Day Forecast
+
+The forecast origin is April 24, 2016, and the forecast horizon is April 25–May 22, 2016.
+
+Models are fitted using data before the forecast horizon and then forecast recursively. Within-horizon lag features use each model's own previous predictions rather than actual sales from the forecast horizon. Future calendar and scheduled price fields are treated as known covariates.
+
+**These evaluation designs address different forecasting tasks.** Their metric values should not be compared as if they came from the same test setting.
+
+## Results
+
+The following tables report the saved results from the executed notebook.
+
+### Rolling One-Step-Ahead Evaluation
 
 | Model | MAE | RMSE | SMAPE (%) | RMSLE |
 |---|---:|---:|---:|---:|
@@ -50,7 +70,7 @@ The two evaluation designs answer different questions; their metric values shoul
 | XGBoost | 0.7966 | 1.5367 | 150.6044 | 0.4818 |
 | Seasonal Naive (lag 7) | 0.9398 | 2.1682 | 74.9930 | 0.6205 |
 
-### Fixed-origin 28-day forecast
+### Fixed-Origin 28-Day Forecast
 
 | Model | MAE | RMSE | SMAPE (%) | RMSLE | WAPE (%) |
 |---|---:|---:|---:|---:|---:|
@@ -59,27 +79,49 @@ The two evaluation designs answer different questions; their metric values shoul
 | XGBoost | 0.9275 | 1.9405 | 142.5330 | 0.5175 | 86.3393 |
 | Seasonal Naive (lag 7) | 1.1071 | 2.2329 | 90.0876 | 0.6765 | 103.0585 |
 
-Lower values indicate better performance for all metrics shown. The best model depends on the metric and forecast setting: Random Forest has the lowest rolling RMSE, LightGBM the lowest fixed-origin RMSE, and XGBoost the lowest fixed-origin MAE and WAPE. The seasonal-naive baseline's much lower SMAPE alongside higher MAE/RMSE should be explicitly discussed, particularly because zero-sales days are common.
+Lower values indicate better performance for all metrics shown.
 
-These numbers are copied from the notebook's saved outputs and have not been independently reproduced outside the original Kaggle run.
+### Key Findings
+
+- **Rolling one-step-ahead:** Random Forest has the lowest RMSE, while LightGBM has the lowest MAE and RMSLE among the machine-learning models.
+- **Fixed-origin forecasting:** XGBoost has the lowest MAE and WAPE, while LightGBM has the lowest RMSE. XGBoost also has the lowest RMSLE.
+- **Baseline comparison:** The seasonal-naive baseline has higher MAE and RMSE than the machine-learning models in both evaluation settings, but substantially lower reported SMAPE.
+- **Metric sensitivity:** The differences in model rankings show why forecasting performance should be assessed using multiple metrics rather than a single score.
+
+The seasonal-naive baseline's lower SMAPE despite its higher MAE and RMSE deserves particular attention because retail demand can contain many zero-sales observations. SMAPE interpretation depends on the exact formula and treatment of zero denominators, so its implementation should be checked before drawing conclusions from this metric.
+
+These results are taken from the notebook's saved outputs. They have not been independently reproduced outside the Kaggle execution.
 
 ## Limitations
 
-- Only 50 product-store series are included; results may not generalize to all M5 items and stores.
-- The models are compared using one chronological split rather than multiple rolling-origin backtests.
-- The selected models and hyperparameters are not the result of a comprehensive tuning study.
-- Price and calendar information during the fixed-origin horizon are treated as known. This assumption should be stated when interpreting the results.
-- Metrics can tell different stories on intermittent, zero-heavy demand series. MAE, RMSE, WAPE, RMSLE, and the exact SMAPE definition should be reported together rather than relying on a single metric.
+- Only 50 product-store series are included; the findings may not generalize to the complete M5 dataset.
+- The evaluation uses a chronological split rather than multiple rolling-origin backtests.
+- The selected models and hyperparameters do not represent an exhaustive tuning study.
+- The fixed-origin evaluation assumes future calendar and scheduled price information is available.
+- Intermittent and zero-heavy demand can produce different model rankings across metrics. MAE, RMSE, WAPE, RMSLE, and a clearly defined SMAPE should be considered together.
+- The findings are specific to the selected series, features, models, and evaluation designs.
 
-## How to run
+## How to Run the Notebook
 
-1. Open the notebook in Kaggle.
-2. Attach the M5 Forecasting Accuracy dataset.
-3. Confirm that `DATA_PATH` points to the attached dataset directory and contains `calendar.csv`, `sales_train_evaluation.csv`, and `sell_prices.csv`.
-4. Run all cells from top to bottom.
+1. Open the [Jupyter notebook in this repository](retail-demand-forecasting-portfolio-v2.ipynb).
+2. To execute it, open or import the notebook in Kaggle.
+3. Attach the [M5 Forecasting Accuracy dataset](https://www.kaggle.com/competitions/m5-forecasting-accuracy).
+4. Confirm that `DATA_PATH` points to the directory containing `calendar.csv`, `sales_train_evaluation.csv`, and `sell_prices.csv`.
+5. Run all cells from top to bottom.
 
-The notebook requires pandas, NumPy, Matplotlib, scikit-learn, and (for the corresponding model comparisons) LightGBM and XGBoost.
+The notebook uses Python libraries including pandas, NumPy, Matplotlib, scikit-learn, LightGBM, and XGBoost.
 
-## Suggested citation
+## Tools and Technologies
 
-Cite the M5 Forecasting Accuracy competition and dataset using the citation or dataset reference provided on its Kaggle page. Do not redistribute the raw dataset in this repository unless its terms permit it.
+Python · pandas · NumPy · scikit-learn · LightGBM · XGBoost · Matplotlib · Jupyter Notebook · Kaggle
+
+## Dataset Citation
+
+The dataset is from the [M5 Forecasting Accuracy competition on Kaggle](https://www.kaggle.com/competitions/m5-forecasting-accuracy). Refer to the competition page for the dataset citation and applicable terms of use.
+
+Raw dataset files are not included in this repository.
+
+---
+
+*This project was developed as a machine-learning portfolio project focused on retail demand forecasting, chronological evaluation, and model comparison.*
+
